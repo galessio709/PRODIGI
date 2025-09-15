@@ -1,0 +1,23 @@
+<h1>{{ currentGame.title }}</h1>
+
+<div class="game-container">
+  <iframe
+    [src]="safeUrl"
+    allowtransparency="true"
+    width="800"
+    height="600"
+    frameborder="0"
+    scrolling="no"
+    allowfullscreen>
+  </iframe>
+</div>
+
+<div class="controls">
+  <button (click)="markAsCompleted()" [disabled]="currentGame.completed">
+    {{ currentGame.completed ? 'Completato ✅' : 'Segna come completato' }}
+  </button>
+
+  <button (click)="goToNextGame()" [disabled]="!currentGame.completed || currentIndex === games.length - 1">
+    Prossimo Gioco →
+  </button>
+</div>

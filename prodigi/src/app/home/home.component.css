@@ -1,0 +1,11 @@
+.game-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
