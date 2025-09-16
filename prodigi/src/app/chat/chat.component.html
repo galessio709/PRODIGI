@@ -1,0 +1,12 @@
+<div class="chat-box">
+  <div class="message" *ngFor="let msg of messages">
+    <strong>{{ msg.user }}:</strong> {{ msg.text }}
+  </div>
+
+  <div *ngIf="loading">⏳ Sto pensando...</div>
+
+  <div class="input">
+    <input [(ngModel)]="userInput" placeholder="Scrivi qui..." />
+    <button (click)="sendMessage()">Invia</button>
+  </div>
+</div>

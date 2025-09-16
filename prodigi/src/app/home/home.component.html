@@ -1,15 +1,7 @@
 <h1>{{ currentGame.title }}</h1>
 
 <div class="game-container">
-  <iframe
-    [src]="safeUrl"
-    allowtransparency="true"
-    width="800"
-    height="600"
-    frameborder="0"
-    scrolling="no"
-    allowfullscreen>
-  </iframe>
+  <div #iframeContainer></div>
 </div>
 
 <div class="controls">
@@ -21,3 +13,7 @@
     Prossimo Gioco →
   </button>
 </div>
+
+<hr />
+
+<app-chat></app-chat>
