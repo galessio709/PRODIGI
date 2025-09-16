@@ -30,16 +30,16 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   @ViewChild('iframeContainer', { static: true }) iframeContainer!: ElementRef<HTMLDivElement>;
 
   games: ScratchGame[] = [
-    /*{
+    {
       id: 1,
       title: 'Preambolo',
       projectUrl: 'https://scratch.mit.edu/projects/1217184322/embed',
       completed: false
-    },*/
+    },
     {
       id: 2,
       title: 'Mini-Gioco 1',
-      projectUrl: 'https://scratch.mit.edu/projects/1132654424/embed',
+      projectUrl: 'https://scratch.mit.edu/projects/1217522882/embed',
       completed: false
     },
     {

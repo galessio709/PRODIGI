@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleAiService } from '../services/google-ai.service';
@@ -10,10 +10,19 @@ import { GoogleAiService } from '../services/google-ai.service';
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
-export class ChatComponent {
-  messages: { user: string; text: string }[] = [];
+export class ChatComponent implements AfterViewChecked {
+
+  @ViewChild('chatBox') chatBox!: ElementRef;
+
+  messages: { user: string; text: string }[] = [
+    { user: 'assistant', text: 'Ciao! Sono il tuo assistente AI 😊' }
+  ];
   userInput = '';
   loading = false;
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
 
   constructor(private aiService: GoogleAiService) {}
 
@@ -21,19 +30,28 @@ export class ChatComponent {
     if (!this.userInput.trim()) return;
 
     const userMessage = this.userInput.trim();
-    this.messages.push({ user: 'Tu', text: userMessage });
+    this.messages.push({ user: 'user', text: this.userInput });
     this.userInput = '';
     this.loading = true;
 
     this.aiService.sendMessage(userMessage).subscribe({
       next: (res) => {
-        this.messages.push({ user: 'AI', text: res.reply });
+        this.messages.push({ user: 'assistant', text: res.reply });
         this.loading = false;
       },
       error: () => {
-        this.messages.push({ user: 'AI', text: 'Errore durante la risposta.' });
+        this.messages.push({ user: 'assistant', text: 'Errore durante la risposta.' });
         this.loading = false;
       }
     });
+
+    this.userInput = '';
+  }
+
+  private scrollToBottom() {
+    if (this.chatBox) {
+      const el = this.chatBox.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    }
   }
 }
