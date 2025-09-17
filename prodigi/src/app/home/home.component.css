@@ -1,11 +1,46 @@
-.game-container {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
+:host {
+  font-family: 'Inter', sans-serif;
+  display: block;
 }
 
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+/* Navbar sempre visibile in cima */
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenitore principale con larghezza massima */
+.main-container {
+  max-width: 1800px;   /* <-- puoi regolare qui (es. 1200, 1300, 1400px) */
+  margin: 1rem auto 0 auto;
+}
+
+/* Chat sticky su desktop */
+@media (min-width: 992px) {
+  app-chat {
+    position: sticky;
+    top: 2rem;
+    display: block;
+  }
+}
+
+/* Pulsanti grandi e leggibili */
+button.btn {
+  font-size: 1.1rem;
+  border-radius: 10px;
+  padding: 0.9rem 1.4rem;
+  white-space: nowrap;
+  transition: background-color 0.2s, transform 0.1s;
+  cursor: pointer;
+}
+
+/* Effetto hover quando attivo */
+button.btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+/* Pulsante disabilitato grigio e non cliccabile */
+button.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }

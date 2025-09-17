@@ -28,7 +28,7 @@ interface ScratchGame {
 export class HomeComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('iframeContainer', { static: true }) iframeContainer!: ElementRef<HTMLDivElement>;
-
+  
   games: ScratchGame[] = [
     {
       id: 1,
@@ -62,7 +62,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   private currentSrc = '';          // tiene traccia dell'url attuale applicato all'iframe
   private onLoadListener?: () => void;
 
-  constructor(private sanitizer: DomSanitizer, private renderer2: Renderer2) {}
+  chatEnabled = false;
+
+  constructor(private sanitizer: DomSanitizer, 
+            private renderer2: Renderer2) {}
 
   ngAfterViewInit(): void {
     // crea l'iframe **una sola volta**
@@ -76,7 +79,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-
   get currentGame(): ScratchGame {
     return this.games[this.currentIndex];
   }
@@ -87,6 +89,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   markAsCompleted() {
     this.games[this.currentIndex].completed = true;
+    this.chatEnabled = true;
   }
 
   goToNextGame(): void {
@@ -104,6 +107,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       this.updateIframeSrc(nextUrl);
     }
 
+    this.chatEnabled = false;
     this.currentIndex = nextIndex;
   }
 
@@ -115,8 +119,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     const iframe = this.renderer2.createElement('iframe') as HTMLIFrameElement;
 
     // attributi base (adattali secondo necessità e sicurezza)
-    this.renderer2.setAttribute(iframe, 'width', '800');
-    this.renderer2.setAttribute(iframe, 'height', '600');
+    //this.renderer2.setAttribute(iframe, 'width', '800');
+    //this.renderer2.setAttribute(iframe, 'height', '600');
     this.renderer2.setAttribute(iframe, 'frameborder', '0');
     this.renderer2.setAttribute(iframe, 'scrolling', 'no');
     this.renderer2.setAttribute(iframe, 'allowtransparency', 'true');

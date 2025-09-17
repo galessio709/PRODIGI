@@ -1,23 +1,28 @@
 <div class="chat-wrapper">
   <h2 class="chat-title">Chat con l'Assistente AI</h2>
 
-  <div #chatBox class="chat-box">
-    <div *ngFor="let msg of messages" [ngClass]="msg.user">
-      <div class="bubble">
-        {{ msg.text }}
-      </div>
+  <div class="chat-content">
+    <div #chatBox class="chat-box">
+      <div *ngFor="let msg of messages" [ngClass]="msg.user">
+        <div class="bubble">
+          {{ msg.text }}
+        </div>
 
-      
+      </div>
+      <div *ngIf="loading">⏳ Sto pensando...</div>
     </div>
-    <div *ngIf="loading">⏳ Sto pensando...</div>
+
+    <div class="chat-input-area">
+      <input [(ngModel)]="userInput" (keyup.enter)="sendMessage()" placeholder="Scrivi un messaggio..."
+        [disabled]="disabled" />
+      <button (click)="sendMessage()" [disabled]="disabled">Invia</button>
+    </div>
   </div>
 
-  <div class="chat-input-area">
-    <input
-      [(ngModel)]="userInput"
-      (keyup.enter)="sendMessage()"
-      placeholder="Scrivi un messaggio..."
-    />
-    <button (click)="sendMessage()">Invia</button>
+  <!-- OVERLAY BLOCCO -->
+  <div class="chat-overlay" *ngIf="disabled">
+    <div class="overlay-text">
+      🔒 Completa il gioco per usare la chat
+    </div>
   </div>
 </div>

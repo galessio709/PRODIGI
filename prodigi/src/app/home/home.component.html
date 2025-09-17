@@ -1,19 +1,37 @@
-<h1>{{ currentGame.title }}</h1>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1">{{ currentGame.title }}</span>
+  </div>
+</nav>
 
-<div class="game-container">
-  <div #iframeContainer></div>
+<div class="container-fluid main-container mt-4 px-5">
+
+  <div class="row g-4">
+
+    <!-- COLONNA GIOCO -->
+    <div class="col-12 col-lg-7">
+
+      <!-- Contenitore iframe -->
+      <div #iframeContainer class="ratio ratio-4x3 mb-3 border rounded shadow-sm overflow-hidden"></div>
+
+      <!-- Pulsanti controllo -->
+      <div class="d-flex gap-3">
+        <button class="btn btn-primary btn-lg" [disabled]="currentGame.completed" (click)="markAsCompleted()">
+          ✅ {{ currentGame.completed ? 'Completato' : 'Segna come completato' }}
+        </button>
+
+        <button class="btn btn-success btn-lg" [disabled]="!currentGame.completed || currentIndex === games.length - 1"
+          (click)="goToNextGame()">
+          ▶️ Prossimo gioco
+        </button>
+      </div>
+    </div>
+
+    <!-- COLONNA CHAT -->
+    <div class="col-12 col-lg-5">
+      <app-chat [disabled]="!chatEnabled"></app-chat>
+    </div>
+
+  </div>
 </div>
-
-<div class="controls">
-  <button (click)="markAsCompleted()" [disabled]="currentGame.completed">
-    {{ currentGame.completed ? 'Completato ✅' : 'Segna come completato' }}
-  </button>
-
-  <button (click)="goToNextGame()" [disabled]="!currentGame.completed || currentIndex === games.length - 1">
-    Prossimo Gioco →
-  </button>
-</div>
-
-<hr />
-
-<app-chat></app-chat>

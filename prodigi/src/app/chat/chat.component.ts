@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked  } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, Input  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleAiService } from '../services/google-ai.service';
@@ -12,6 +12,7 @@ import { GoogleAiService } from '../services/google-ai.service';
 })
 export class ChatComponent implements AfterViewChecked {
 
+  @Input() disabled = false;
   @ViewChild('chatBox') chatBox!: ElementRef;
 
   messages: { user: string; text: string }[] = [
