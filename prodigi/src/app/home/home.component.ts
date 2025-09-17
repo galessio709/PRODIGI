@@ -3,6 +3,7 @@ import {
   ElementRef,
   Renderer2,
   ViewChild,
+  OnInit,
   AfterViewInit,
   OnDestroy
 } from '@angular/core';
@@ -26,6 +27,54 @@ interface ScratchGame {
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
+
+  usageLimitMinutes = 0.1;     // ⏱ tempo massimo d’uso
+  cooldownHours = 0.001;          // ⏳ tempo di blocco dopo scadenza
+  blocked = false;
+  unblockTime: string | null = null;
+
+  ngOnInit() {
+    this.checkUsage();
+    setInterval(() => this.checkUsage(), 1 * 1000); // ricontrolla ogni minuto
+  }
+
+  private checkUsage() {
+    const now = Date.now();
+    const blockUntil = localStorage.getItem('blockUntil');
+    const sessionStart = localStorage.getItem('sessionStart');
+
+    if (blockUntil && now < parseInt(blockUntil)) {
+      this.blocked = true;
+      this.unblockTime = this.formatTime(parseInt(blockUntil)); // ⏰ mostra orario
+      return;
+    }
+
+    if (!sessionStart) {
+      localStorage.setItem('sessionStart', now.toString());
+      this.blocked = false;
+      this.unblockTime = null;
+      return;
+    }
+
+    const elapsed = now - parseInt(sessionStart);
+    const limit = this.usageLimitMinutes * 60 * 1000;
+
+    if (elapsed >= limit) {
+      const unblockAt = now + this.cooldownHours * 60 * 60 * 1000;
+      localStorage.setItem('blockUntil', unblockAt.toString());
+      localStorage.removeItem('sessionStart');
+      this.blocked = true;
+      this.unblockTime = this.formatTime(unblockAt); // ⏰
+    } else {
+      this.blocked = false;
+      this.unblockTime = null;
+    }
+  }
+
+  private formatTime(timestamp: number): string {
+    const d = new Date(timestamp);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 
   @ViewChild('iframeContainer', { static: true }) iframeContainer!: ElementRef<HTMLDivElement>;
   
