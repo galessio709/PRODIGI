@@ -334,3 +334,28 @@
 
 
 <router-outlet />
+<!-- Se non loggato mostra login -->
+<app-login
+  *ngIf="!username && !adminMode"
+  (loggedIn)="onLoggedIn()"
+  (adminLoggedIn)="onAdminLoggedIn()">
+</app-login>
+
+<!-- Se loggato mostra home -->
+<div *ngIf="username">
+  <!-- Navbar semplice con nome e logout -->
+  <nav class="navbar navbar-light bg-light shadow-sm">
+    <div class="container-fluid">
+      <span class="navbar-brand">Benvenuto, {{ username }}</span>
+      <button class="btn btn-outline-secondary btn-sm" (click)="logout()">Esci</button>
+    </div>
+  </nav>
+
+  <!-- componente principale -->
+  <app-home></app-home>
+</div>
+
+<!-- Se loggato come admin -->
+<div *ngIf="adminMode">
+  <app-admin (exitAdmin)="onAdminLoggedOut()"></app-admin>
+</div>

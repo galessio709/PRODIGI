@@ -1,0 +1,25 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Log Accessi</h2>
+    <button class="btn btn-outline-danger" (click)="logoutAdmin()">Esci Admin</button>
+  </div>
+
+  <button class="btn btn-primary mb-3" (click)="exportCSV()">Esporta CSV</button>
+
+  <table class="table table-striped table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>Nome</th>
+        <th>DeviceId</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let log of logs">
+        <td>{{ log.name }}</td>
+        <td>{{ log.deviceId }}</td>
+        <td>{{ log.date }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

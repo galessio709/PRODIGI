@@ -1,0 +1,12 @@
+<div class="login-container card p-4 shadow-sm">
+    <h3 class="mb-3">Benvenuto! Inserisci il tuo nome</h3>
+
+    <input class="form-control form-control-lg mb-3" [(ngModel)]="username" placeholder="Il tuo nome (es. Marco)"
+        (keyup.enter)="login()" />
+
+    <button class="btn btn-primary btn-lg w-100" (click)="login()">Inizia a giocare</button>
+
+    <button class="btn btn-outline-secondary btn-lg w-100 mt-2" (click)="loginAsAdmin()">
+        🔑 Accedi come Admin
+    </button>
+</div>

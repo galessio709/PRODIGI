@@ -10,6 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ChatComponent } from '../chat/chat.component';
+import { Router } from '@angular/router';
 
 
 interface ScratchGame {
@@ -20,7 +21,7 @@ interface ScratchGame {
 }
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-home',
   standalone: true,
   imports: [CommonModule, ChatComponent],
   templateUrl: './home.component.html',
@@ -28,8 +29,8 @@ interface ScratchGame {
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
 
-  usageLimitMinutes = 0.1;     // ⏱ tempo massimo d’uso
-  cooldownHours = 0.001;          // ⏳ tempo di blocco dopo scadenza
+  usageLimitMinutes = 20;     // ⏱ tempo massimo d’uso (in mimnuti)
+  cooldownHours = 0.001;          // tempo di blocco dopo scadenza (in ore)
   blocked = false;
   unblockTime: string | null = null;
 
@@ -114,7 +115,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   chatEnabled = false;
 
   constructor(private sanitizer: DomSanitizer, 
-            private renderer2: Renderer2) {}
+          private renderer2: Renderer2,
+          private router: Router) {}
 
   ngAfterViewInit(): void {
     // crea l'iframe **una sola volta**

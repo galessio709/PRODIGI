@@ -5,12 +5,7 @@ import { HomeComponent } from './app/home/home.component';
 import { importProvidersFrom } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 
-bootstrapApplication(HomeComponent, {
-  ...appConfig,
-  providers: [
-    ...(appConfig.providers || []),
-    importProvidersFrom(HttpClientModule)   // <-- aggiunto qui
-  ]
+bootstrapApplication(AppComponent, {
+  providers: [importProvidersFrom(HttpClientModule)]
 })
-  .catch((err) => console.error(err));
-  
+  .catch(err => console.error(err));
