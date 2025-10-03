@@ -103,6 +103,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       title: 'Mini-Gioco 3',
       projectUrl: 'https://scratch.mit.edu/projects/1220326187/embed',
       completed: false
+    },
+    {
+      id: 5,
+      title: 'Mini-Gioco 4',
+      projectUrl: 'https://scratch.mit.edu/projects/1223097804/embed',
+      completed: false
     }
   ];
 
