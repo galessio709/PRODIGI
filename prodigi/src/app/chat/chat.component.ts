@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked, Input  } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleAiService } from '../services/google-ai.service';
@@ -13,6 +13,7 @@ import { GoogleAiService } from '../services/google-ai.service';
 export class ChatComponent implements AfterViewChecked {
 
   @Input() disabled = false;
+  @Input() initialMessage: string | undefined = undefined;
   @ViewChild('chatBox') chatBox!: ElementRef;
 
   messages: { user: string; text: string }[] = [
@@ -24,6 +25,18 @@ export class ChatComponent implements AfterViewChecked {
   ngAfterViewChecked() {
     this.scrollToBottom();
   }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['initialMessage'] && this.initialMessage) {
+      this.addMessageFromAI(this.initialMessage);
+    }
+  }
+
+  addMessageFromAI(text: string) {
+  this.messages.push({ user: 'assistant', text });
+  setTimeout(() => this.scrollToBottom(), 0);
+}
+
 
   constructor(private aiService: GoogleAiService) {}
 

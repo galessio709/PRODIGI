@@ -1,4 +1,4 @@
-
+<!-- 
 <div class="app-block-overlay" *ngIf="blockedLimit">
   <div class="overlay-content">
     ⏳ Hai raggiunto il tempo massimo di utilizzo!<br><br>
@@ -15,7 +15,7 @@
 </div>
 
 
-<!-- NAVBAR -->
+ NAVBAR 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h1">{{ currentGame.title }}</span>
@@ -26,18 +26,18 @@
 
   <div class="row g-4">
 
-    <!-- COLONNA GIOCO -->
+     COLONNA GIOCO 
     <div class="col-12 col-lg-7">
 
-      <!-- Contenitore iframe -->
+       Contenitore iframe 
       <div #iframeContainer class="ratio ratio-4x3 mb-3 border rounded shadow-sm overflow-hidden"></div>
 
-      <!-- Pulsanti controllo -->
+       Pulsanti controllo 
       <div class="d-flex gap-3">
         <button class="btn btn-primary btn-lg" [disabled]="currentGame.completed" (click)="markAsCompleted()">
           {{ currentGame.completed ? '✅ Completato' : '⏳ Segna come completato' }}
         </button>
-        <!--"!currentGame.completed || currentIndex === games.length - 1"-->
+        "!currentGame.completed || currentIndex === games.length - 1"
         <button class="btn btn-success btn-lg" [disabled]="!currentGame.nextGame"
           (click)="goToNextGame()">
           ▶️ Prossimo gioco
@@ -45,9 +45,66 @@
       </div>
     </div>
 
-    <!-- COLONNA CHAT -->
+     COLONNA CHAT 
     <div class="col-12 col-lg-5">
       <app-chat [disabled]="!chatEnabled"></app-chat>
+    </div>
+
+  </div>
+</div> -->
+
+<!-- OVERLAY BLOCCO TEMPO MASSIMO -->
+<div class="app-block-overlay" *ngIf="blockedLimit">
+  <div class="overlay-content">
+    ⏳ Hai raggiunto il tempo massimo di utilizzo!<br><br>
+    Potrai tornare a giocare alle <strong>{{ unblockLimitTime }}</strong>
+  </div>
+</div>
+
+<!-- OVERLAY ATTIVITÀ ANALOGICA -->
+<div class="app-block-analog-overlay" *ngIf="currentStep.blockedAnalog">
+  <div class="overlay-content">
+    È il momento della missione analogica!<br><br>
+    {{ currentStep.description }}<br><br>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1">{{ currentGame.title }}</span>
+  </div>
+</nav>
+
+<div class="container-fluid main-container mt-4 px-5">
+  <div class="row g-4">
+
+    <!-- COLONNA GIOCO -->
+    <div class="col-12 col-lg-7 d-flex flex-column">
+
+      <!-- Contenitore iframe -->
+      <div #iframeContainer class="ratio ratio-4x3 mb-3 border rounded shadow-sm overflow-hidden flex-grow-1"></div>
+
+      <!-- Pulsanti controllo -->
+      <div class="d-flex gap-3 mt-3">
+        <button class="btn btn-primary btn-lg"
+                [disabled]="!currentStep.completedEnabled"
+                (click)="markStepCompleted()">
+          {{ currentStep.completedEnabled ? '⏳ Segna come completato' : '✅ Completato' }}
+        </button>
+
+        <button class="btn btn-success btn-lg"
+                [disabled]="!currentStep.nextGameEnabled"
+                (click)="goToNextGameStep()">
+          ▶️ Prossimo passo / gioco
+        </button>
+      </div>
+
+    </div>
+
+    <!-- COLONNA CHAT -->
+    <div class="col-12 col-lg-5 d-flex flex-column">
+      <app-chat [disabled]="!currentStep.chatEnabled" [initialMessage]="currentStep.chatEnabled ? currentStep.description : undefined" class="flex-grow-1"></app-chat>
     </div>
 
   </div>
