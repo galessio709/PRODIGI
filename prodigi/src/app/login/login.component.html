@@ -1,5 +1,31 @@
+
+<style>
+  .content {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 3rem;
+  }
+
+  .content h1 {
+    margin-top: 1.75rem;
+  }
+
+  .content p {
+    margin-top: 1.5rem;
+  }
+</style>
+
+<div class="content">
+    <div class="title">
+        <h1>Ciao, questo è PRODIGI</h1>
+        <p>Siete pronti a mettervi alla prova?</p>
+    </div>
+</div>
+
 <div class="login-container card p-4 shadow-sm">
-    <h3 class="mb-3">Benvenuto! Inserisci il tuo nome</h3>
+    <h3 class="mb-3">Inserisci il tuo nome</h3>
 
     <input class="form-control form-control-lg mb-3" [(ngModel)]="username" placeholder="Il tuo nome (es. Marco)"
         (keyup.enter)="login()" />

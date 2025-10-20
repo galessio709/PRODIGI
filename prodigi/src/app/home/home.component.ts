@@ -18,6 +18,9 @@ interface ScratchGame {
   title: string;
   projectUrl: string;
   completed: boolean;
+  nextGame: boolean;
+  analogDescription: string;
+  startConversation: string;
 }
 
 @Component({
@@ -29,14 +32,20 @@ interface ScratchGame {
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
 
-  usageLimitMinutes = 20;     // ⏱ tempo massimo d’uso (in mimnuti)
-  cooldownHours = 0.001;          // tempo di blocco dopo scadenza (in ore)
-  blocked = false;
-  unblockTime: string | null = null;
+  usageLimitMinutes = 120;     // ⏱ tempo massimo d’uso (in mimnuti)
+  cooldownLimitHours = 0.001;          // tempo di blocco dopo scadenza (in ore)
+  blockedLimit = false;
+  unblockLimitTime: string | null = null;
+
+  analogActMinutes = 0.01;     // ⏱ tempo di attivitò analogica (in mimnuti)
+  blockedAnalog = false;
+  unblockAnalogTime: string | null = null;
 
   ngOnInit() {
     this.checkUsage();
     setInterval(() => this.checkUsage(), 1 * 1000); // ricontrolla ogni minuto
+    //this.checkAnalog();
+    //setInterval(() => this.checkAnalog(), 1 * 1000); // ricontrolla ogni minuto
   }
 
   private checkUsage() {
@@ -45,15 +54,15 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     const sessionStart = localStorage.getItem('sessionStart');
 
     if (blockUntil && now < parseInt(blockUntil)) {
-      this.blocked = true;
-      this.unblockTime = this.formatTime(parseInt(blockUntil)); // ⏰ mostra orario
+      this.blockedLimit = true;
+      this.unblockLimitTime = this.formatTime(parseInt(blockUntil)); // ⏰ mostra orario
       return;
     }
 
     if (!sessionStart) {
       localStorage.setItem('sessionStart', now.toString());
-      this.blocked = false;
-      this.unblockTime = null;
+      this.blockedLimit = false;
+      this.unblockLimitTime = null;
       return;
     }
 
@@ -61,14 +70,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     const limit = this.usageLimitMinutes * 60 * 1000;
 
     if (elapsed >= limit) {
-      const unblockAt = now + this.cooldownHours * 60 * 60 * 1000;
+      const unblockAt = now + this.cooldownLimitHours * 60 * 60 * 1000;
       localStorage.setItem('blockUntil', unblockAt.toString());
       localStorage.removeItem('sessionStart');
-      this.blocked = true;
-      this.unblockTime = this.formatTime(unblockAt); // ⏰
+      this.blockedLimit = true;
+      this.unblockLimitTime = this.formatTime(unblockAt); // ⏰
     } else {
-      this.blocked = false;
-      this.unblockTime = null;
+      this.blockedLimit = false;
+      this.unblockLimitTime = null;
     }
   }
 
@@ -84,49 +93,73 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       id: 1,
       title: 'Preambolo',
       projectUrl: 'https://scratch.mit.edu/projects/1217184322/embed',
-      completed: false
+      completed: true,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     },
     {
       id: 2,
       title: 'Mini-Gioco 1',
       projectUrl: 'https://scratch.mit.edu/projects/1217522882/embed',
-      completed: false
+      completed: false,
+      nextGame: false,
+      analogDescription: "📖 Leggere il giornale e capire quali notizie sono vere o false. Trovare una notizia positiva e raccontarla a un amico/genitore",
+      startConversation: "Che notizia hai scelto? E’ stato semplice trovare una notizia positiva sul giornale?"
     },
     {
       id: 3,
       title: 'Mini-Gioco 2',
       projectUrl: 'https://scratch.mit.edu/projects/1217687029/embed',
-      completed: false
+      completed: false,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     },
     {
       id: 4,
       title: 'Mini-Gioco 3',
       projectUrl: 'https://scratch.mit.edu/projects/1220326187/embed',
-      completed: false
+      completed: false,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     },
     {
       id: 5,
       title: 'Mini-Gioco 4',
       projectUrl: 'https://scratch.mit.edu/projects/1223097804/embed',
-      completed: false
+      completed: false,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     },
     {
       id: 6,
       title: 'Mini-Gioco 5',
       projectUrl: 'https://scratch.mit.edu/projects/1225868605/embed',
-      completed: false
+      completed: false,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     }, 
     {
       id: 7,
       title: 'Mini-Gioco 6',
       projectUrl: 'https://scratch.mit.edu/projects/1228403027/embed',
-      completed: false
+      completed: false,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     }, 
     {
       id: 8,
       title: 'Prologo Finale',
       projectUrl: 'https://scratch.mit.edu/projects/1226047444/embed',
-      completed: false
+      completed: false,
+      nextGame: true,
+      analogDescription: "",
+      startConversation: "",
     }
   ];
 
@@ -162,9 +195,64 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustResourceUrl(this.currentGame.projectUrl);
   }
 
+  /*
+  analogActMinutes = 0.01;     // ⏱ tempo di attivitò analogica (in mimnuti)
+  blockedAnalog = false;
+  unblockAnalogTime: string | null = null;
+  */
+  setAnalog() {
+    const now = Date.now();
+    const unblockAt = now + this.analogActMinutes * 60 * 60 * 1000;
+    localStorage.setItem('blockAnalogUntil', unblockAt.toString());
+    const blockAnalogUntil = localStorage.getItem('blockAnalogUntil');
+    //const sessionStart = localStorage.getItem('sessionStart');
+
+    if (blockAnalogUntil && now < parseInt(blockAnalogUntil)) {
+      this.blockedAnalog = true;
+      this.unblockAnalogTime = this.formatTime(parseInt(blockAnalogUntil)); // ⏰ mostra orario
+      return;
+    }
+  }
+
+  checkAnalog() {
+    const blockAnalogUntil = localStorage.getItem('blockAnalogUntil');
+    /*
+    if (!sessionStart) {
+      localStorage.setItem('sessionStart', now.toString());
+      this.blockedLimit = false;
+      this.unblockLimitTime = null;
+      return;
+    }
+    */
+
+    if (!blockAnalogUntil) {
+      return;
+    }
+
+    const now = Date.now();
+    const elapsed = now - parseInt(blockAnalogUntil);
+    const limit = this.analogActMinutes * 60 * 1000;
+
+    if (elapsed >= limit) {
+      const unblockAt = now + this.analogActMinutes * 60 * 60 * 1000;
+      localStorage.setItem('blockedAnalog', unblockAt.toString());
+      //localStorage.removeItem('sessionStart');
+      this.blockedAnalog = true;
+      this.unblockAnalogTime = this.formatTime(unblockAt); // ⏰
+    } else {
+      this.blockedAnalog = false;
+      this.unblockAnalogTime = null;
+
+      this.chatEnabled = true; // abilita AI per conversazione dopo attività
+      //this.chat.startConversation(this.games[this.currentIndex].startConversation)
+    }
+  }
+
   markAsCompleted() {
     this.games[this.currentIndex].completed = true;
-    this.chatEnabled = true;
+    this.setAnalog()
+    this.blockedAnalog = true
+    //this.chatEnabled = true;
   }
 
   goToNextGame(): void {

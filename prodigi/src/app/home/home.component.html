@@ -1,8 +1,16 @@
 
-<div class="app-block-overlay" *ngIf="blocked">
+<div class="app-block-overlay" *ngIf="blockedLimit">
   <div class="overlay-content">
     ⏳ Hai raggiunto il tempo massimo di utilizzo!<br><br>
-    Potrai tornare a giocare alle <strong>{{ unblockTime }}</strong>
+    Potrai tornare a giocare alle <strong>{{ unblockLimitTime }}</strong>
+  </div>
+</div>
+
+<div class="app-block-analog-overlay" *ngIf="blockedAnalog">
+  <div class="overlay-content">
+    è il momento della missione analogica!<br><br>
+    {{ currentGame.analogDescription }}<br><br>
+    Potrai tornare a giocare alle <strong>{{ unblockAnalogTime }}</strong>
   </div>
 </div>
 
@@ -27,10 +35,10 @@
       <!-- Pulsanti controllo -->
       <div class="d-flex gap-3">
         <button class="btn btn-primary btn-lg" [disabled]="currentGame.completed" (click)="markAsCompleted()">
-          ✅ {{ currentGame.completed ? 'Completato' : 'Segna come completato' }}
+          {{ currentGame.completed ? '✅ Completato' : '⏳ Segna come completato' }}
         </button>
-
-        <button class="btn btn-success btn-lg" [disabled]="!currentGame.completed || currentIndex === games.length - 1"
+        <!--"!currentGame.completed || currentIndex === games.length - 1"-->
+        <button class="btn btn-success btn-lg" [disabled]="!currentGame.nextGame"
           (click)="goToNextGame()">
           ▶️ Prossimo gioco
         </button>

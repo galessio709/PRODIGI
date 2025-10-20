@@ -59,6 +59,20 @@ button.btn:disabled {
   padding: 2rem;
 }
 
+.app-block-analog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  text-align: center;
+  padding: 2rem;
+}
+
 .overlay-content {
   background: #212529;
   padding: 2rem 3rem;
