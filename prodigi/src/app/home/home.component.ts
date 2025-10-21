@@ -29,6 +29,7 @@ interface ScratchGame {
   projectUrl: string;
   steps: GameStep[];
   currentStepIndex: number;
+  diario: string;
 }
 
 interface GameStep {
@@ -191,7 +192,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       projectUrl: 'https://scratch.mit.edu/projects/1217184322/embed',
       steps: [
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
-      ]
+      ],
+      diario: '/assets/diario.png',
     },
     {
       id: 2,
@@ -203,7 +205,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "📖 Leggere il giornale e trovare una notizia positiva da raccontare." },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Che notizia hai scelto? E’ stato semplice trovare una notizia positiva?" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
-      ]
+      ],
+      diario: '/assets/1.png',
     },
     {
       id: 2,
@@ -215,7 +218,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🔴🟢🔵🟣 Giocare a Mastermind analogico con amici o familiari." },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com’è stato giocare a mastermind?" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
-      ]
+      ],
+      diario: '/asset/2.png',
     },
     // altri giochi seguono lo stesso schema...
   ];
@@ -449,7 +453,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           const unlock = this.chatRef.getLastResponse()
           console.log(unlock)
           if (unlock.includes("Complimenti! Puoi passare al prossimo gioco!")) {
-            
+
             this.advanceStep()
             clearInterval(interval);
           }
@@ -501,5 +505,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.iframeEl.addEventListener('load', this.onLoadListener);
 
     this.currentSrc = url;
+  }
+
+  getBackgroundForGame(): string {
+    return this.currentGame.diario;
   }
 }
