@@ -57,7 +57,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   blockedAnalog = false;
   unblockAnalogTime: string | null = null;
 
-  analogCooldownMinutes = 0.01;  // ⏱ tempo di attivitò analogica (in mimnuti) da attendere prima di abilitare la chat
+  analogCooldownMinutes = 0.5;  // ⏱ tempo di attivitò analogica (in mimnuti) da attendere prima di abilitare la chat
 
   ngOnInit() {
     this.checkUsage();
@@ -202,6 +202,18 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "📖 Leggere il giornale e trovare una notizia positiva da raccontare." },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Che notizia hai scelto? E’ stato semplice trovare una notizia positiva?" },
+        { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
+      ]
+    },
+    {
+      id: 2,
+      title: 'Mini-Gioco 2',
+      currentStepIndex: 0,
+      projectUrl: 'https://scratch.mit.edu/projects/1217687029/embed',
+      steps: [
+        { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🔴🟢🔵🟣 Giocare a Mastermind analogico con amici o familiari." },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com’è stato giocare a mastermind?" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ]
     },
@@ -432,7 +444,16 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (step.chatEnabled) {
       const message = this.currentStep.description;  // o qualunque testo decidi
       if (this.chatRef) {
-        this.chatRef.initialMessage = message ?? undefined;;
+        this.chatRef.initialMessage = message ?? undefined;
+        const interval = setInterval(() => {
+          const unlock = this.chatRef.getLastResponse()
+          console.log(unlock)
+          if (unlock.includes("Complimenti! Puoi passare al prossimo gioco!")) {
+            
+            this.advanceStep()
+            clearInterval(interval);
+          }
+        }, 1000); // ogni secondo, puoi aumentare a 10-30s per ottimizzare
       }
     }
   }

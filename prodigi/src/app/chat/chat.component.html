@@ -16,13 +16,15 @@
       <input [(ngModel)]="userInput" (keyup.enter)="sendMessage()" placeholder="Scrivi un messaggio..."
         [disabled]="disabled" />
       <button (click)="sendMessage()" [disabled]="disabled">Invia</button>
+
+      <!-- OVERLAY BLOCCO -->
+      <div class="chat-overlay" *ngIf="disabled">
+        <div class="overlay-text">
+          🔒 Completa il gioco per usare la chat
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- OVERLAY BLOCCO -->
-  <div class="chat-overlay" *ngIf="disabled">
-    <div class="overlay-text">
-      🔒 Completa il gioco per usare la chat
-    </div>
-  </div>
+
 </div>

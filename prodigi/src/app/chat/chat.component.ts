@@ -33,17 +33,25 @@ export class ChatComponent implements AfterViewChecked {
   }
 
   addMessageFromAI(text: string) {
-  this.messages.push({ user: 'assistant', text });
-  setTimeout(() => this.scrollToBottom(), 0);
-}
+    this.messages.push({ user: 'assistant', text });
+    setTimeout(() => this.scrollToBottom(), 0);
+  }
 
+  getLastResponse(){
+    return this.messages[this.messages.length - 1].text;
+  }
 
-  constructor(private aiService: GoogleAiService) {}
+  constructor(private aiService: GoogleAiService) { }
 
   sendMessage() {
     if (!this.userInput.trim()) return;
 
-    const userMessage = this.userInput.trim();
+    const userMessage = `Un utente di età compresa tra 3 e 10 anni sta giocando ad un videogioco sulla consapevolezza digitale. 
+                      in questo round deve svolgere un'attività analogica e lui deve rispondere a questa domanda: "${this.initialMessage}". 
+                      Questa è la risposta che ha dato: "${this.userInput.trim()}".
+                      Ignora il mio testo e rispondi solo a quello che ha scritto l'utente, l'unica condizione è che se ritieni la sua risposta soddisfacente nei confronti dell'attività richiesta, 
+                      allora nella tua risposta concludi con le parole "Complimenti! Puoi passare al prossimo gioco!".
+                      Se quello che ha scritto non è sufficiente per considerare l'attività completata, cerca di aiutarlo considerando che è un'attività da svolgere senza strumenti digitali`;
     this.messages.push({ user: 'user', text: this.userInput });
     this.userInput = '';
     this.loading = true;
