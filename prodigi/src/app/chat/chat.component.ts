@@ -14,6 +14,7 @@ export class ChatComponent implements AfterViewChecked {
 
   @Input() disabled = false;
   @Input() initialMessage: string | undefined = undefined;
+  @Input() sigillo: string | undefined = undefined;
   @ViewChild('chatBox') chatBox!: ElementRef;
 
   messages: { user: string; text: string }[] = [
@@ -50,7 +51,7 @@ export class ChatComponent implements AfterViewChecked {
                       in questo round deve svolgere un'attività analogica e lui deve rispondere a questa domanda: "${this.initialMessage}". 
                       Questa è la risposta che ha dato: "${this.userInput.trim()}".
                       Ignora il mio testo e rispondi solo a quello che ha scritto l'utente, l'unica condizione è che se ritieni la sua risposta soddisfacente nei confronti dell'attività richiesta, 
-                      allora nella tua risposta concludi con le parole "Complimenti! Puoi passare al prossimo gioco!".
+                      allora nella tua risposta concludi con le parole "Complimenti! Hai ottenuto il sigillo: ${this.sigillo}! Puoi passare al prossimo gioco!".
                       Se quello che ha scritto non è sufficiente per considerare l'attività completata, cerca di aiutarlo considerando che è un'attività da svolgere senza strumenti digitali`;
     this.messages.push({ user: 'user', text: this.userInput });
     this.userInput = '';
