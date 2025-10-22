@@ -40,18 +40,76 @@ interface GameStep {
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
 
+  username: string | null = localStorage.getItem("username")
+
   usageLimitMinutes = 120;     // ⏱ tempo massimo d’uso (in mimnuti)
   cooldownLimitHours = 0.001;          // tempo di blocco dopo scadenza (in ore)
   blockedLimit = false;
   unblockLimitTime: string | null = null;
 
   analogCooldownMinutes = 0.1;  // ⏱ tempo di attivitò analogica (in mimnuti) da attendere prima di abilitare la chat
+  unblockAnalogTime: string | null = null;
 
   currentBook = "/assets/diario.png"
 
   ngOnInit() {
+    console.log(this.username)
+    this.loadProgress();
+    this.handleStep();
     this.checkUsage();
     setInterval(() => this.checkUsage(), 1 * 1000); // ricontrolla ogni minuto
+  }
+
+  private saveProgress() {
+    const data = {
+      currentIndexStorage: this.currentIndex,
+      currentStepIndexStorage: this.currentGame.currentStepIndex,
+      blockedLimitStorage: this.blockedLimit,
+      unblockLimitTimeStorage: this.unblockLimitTime,
+      blockedAnalogStorage: this.currentStep.blockedAnalog,
+      unblockAnalogTimeStorage: this.unblockAnalogTime,
+      chatEnabledStorage: this.currentStep.chatEnabled,
+      currentBookStorage: this.currentBook,
+      //achievements: this.achievements,
+      //sessionStartTime: this.sessionStartTime
+    };
+    localStorage.setItem(`gameState_${this.username}`, JSON.stringify(data));
+  }
+
+  private loadProgress() {
+    const raw = localStorage.getItem(`gameState_${this.username}`);
+    if (!raw) return;
+
+    try {
+      const state = JSON.parse(raw);
+
+      this.currentIndex = state.currentIndexStorage;
+      this.currentGame.currentStepIndex = state.currentStepIndexStorage;
+      this.blockedLimit = state.blockedLimitStorage;
+      this.unblockLimitTime = state.unblockLimitTimeStorage;
+      this.currentStep.blockedAnalog = state.blockedAnalogStorage;
+      this.unblockAnalogTime = state.unblockAnalogTimeStorage;
+      this.chatEnabled = state.chatEnabledStorage;
+      this.currentBook = state.currentBookStorage;
+      // Object.assign(this, state);
+
+      // // Se esiste un blocco ancora valido, riapplichiamo overlay
+      // if (this.blockedAnalog && Date.now() < this.unblockAnalogTime) {
+      //   this.startAnalogCountdown();
+      // } else {
+      //   this.blockedAnalog = false;
+      // }
+
+      // if (this.chatUnlockTime && Date.now() < this.chatUnlockTime) {
+      //   this.chatEnabled = false;
+      //   this.scheduleChatUnlock();
+      // } else {
+      //   this.chatEnabled = true;
+      // }
+
+    } catch (err) {
+      console.error('Errore nel caricamento stato utente', err);
+    }
   }
 
   private checkUsage() {
@@ -273,20 +331,25 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       this.games[this.currentIndex].currentStepIndex = 0;
       this.updateIframeSrc(this.currentGame.projectUrl);
     }
+    this.saveProgress()
+    this.handleStep()
+  }
+
+  handleStep() {
+    const step = this.currentStep;
 
     // --- Gestione chat con cooldown ---
-    const step = this.currentStep;
     if (step.blockedAnalog) {
       // chat abilitata solo dopo X minuti
       const unlockTime = Date.now() + this.analogCooldownMinutes * 60 * 1000;
       localStorage.setItem('chatUnlockTime', unlockTime.toString());
+      this.unblockAnalogTime = unlockTime.toString()
       this.chatEnabled = false;
 
       // controlla periodicamente se il tempo è passato
       const interval = setInterval(() => {
         const unlock = parseInt(localStorage.getItem('chatUnlockTime') || '0');
         if (Date.now() >= unlock) {
-          // this.chatEnabled = true;
           this.advanceStep()
           clearInterval(interval);
         }
