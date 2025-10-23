@@ -261,10 +261,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🎮 Una volta raccolti i 6 sigilli, come tua ultima missione analogica condividi il gioco con i tuoi amici/familiari e poi raccontami cosa ne pensano del gioco." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "" },
-        { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Hai condiviso il gioco amici e familiari? Cosa ne pensano? Vorrebbero giocarci anche loro", sigillo: "Harmony" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false }
       ],
-      diario: '/assets/6.png', sigillo: ""
+      diario: '/assets/7.png', sigillo: "harmony.png"
     }
   ];
 
