@@ -1,0 +1,20 @@
+.footer {
+  /* position: fixed; */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  color: black;
+}
+
+.bg-custom {
+  background-color: #ffffffdf;
+}
+
+.logo-img {
+  height: 6rem;
+}
+
+* {
+  color: black;
+}

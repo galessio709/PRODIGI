@@ -1,5 +1,11 @@
+
+.title {
+  margin: 5%;
+  color: aliceblue;
+}
+
 .login-container {
-  max-width: 420px;
+  max-width: 50vh;
   margin: 6vh auto;
   text-align: center;
   border-radius: 12px;

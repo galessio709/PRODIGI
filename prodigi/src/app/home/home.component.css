@@ -31,6 +31,7 @@ button.btn {
   white-space: nowrap;
   transition: background-color 0.2s, transform 0.1s;
   cursor: pointer;
+  border: 0.2em solid white; /* bordo bianco */
 }
 
 /* Effetto hover quando attivo */
@@ -82,10 +83,9 @@ button.btn:disabled {
 
 .game-book {
   justify-content: center;
-  color: #000;
-  font-size: 1.5rem;
+  color: #ffffff;
+  font-size: 2rem;
   text-align: center;
-  padding: 2rem;
 }
 
 /* BADGE */

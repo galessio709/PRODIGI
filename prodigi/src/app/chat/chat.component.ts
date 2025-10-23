@@ -25,6 +25,7 @@ export class ChatComponent implements AfterViewChecked {
 
   ngAfterViewChecked() {
     this.scrollToBottom();
+    // TODO scorrere solo quando vengono aggiunti messaggi, non sempre altrimenti non riesco a leggere conversazione precedente
   }
 
   ngOnChanges(changes: SimpleChanges) {
