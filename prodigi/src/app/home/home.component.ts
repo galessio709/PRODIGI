@@ -52,12 +52,16 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   currentBook = "/assets/diario.png"
 
-  ngOnInit() {
+  ngAfterViewInit() {
     console.log(this.username)
     this.loadProgress();
-    this.handleStep();
     this.checkUsage();
-    setInterval(() => this.checkUsage(), 1 * 1000); // ricontrolla ogni minuto
+    setInterval(() => {
+      this.checkUsage()
+      // console.log("ogni secondo controllo limite di gioco")
+    }, 10 * 1000); // ricontrolla ogni secondo 1000ms
+    this.createIframeOnce(this.games[this.currentIndex].projectUrl); // crea l'iframe **una sola volta**
+    this.handleStep();
   }
 
   private saveProgress() {
@@ -277,11 +281,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     private renderer2: Renderer2,
     private router: Router) { }
 
-  ngAfterViewInit(): void {
-    // crea l'iframe **una sola volta**
-    this.createIframeOnce(this.games[this.currentIndex].projectUrl);
-  }
-
   ngOnDestroy(): void {
     // pulizia listener se necessario
     if (this.iframeEl && this.onLoadListener) {
@@ -336,6 +335,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   }
 
   handleStep() {
+    console.log("onInit faccio handleStep")
+    console.log(this.currentStep)
     const step = this.currentStep;
 
     // --- Gestione chat con cooldown ---
@@ -359,12 +360,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (step.chatEnabled) {
       const message = this.currentStep.description;  // domanda per valutare att. anaogica
       const sigillo = this.currentStep.sigillo;  // domanda per valutare att. anaogica
+      console.log(`dentro step.chatEnabled ${message} - ${sigillo}`)
       if (this.chatRef) {
+        console.log(`dentro chatRef ${this.chatRef}`)
         this.chatRef.initialMessage = message ?? undefined;
         this.chatRef.sigillo = sigillo ?? undefined;
         const interval = setInterval(() => {
           const unlock = this.chatRef.getLastResponse()
-          console.log(unlock)
+          console.log("ogni secondo controllo ultima risposta")
           if (unlock.includes("Puoi passare al prossimo gioco!")) {
             this.showBadge()
             this.currentBook = this.currentGame.diario

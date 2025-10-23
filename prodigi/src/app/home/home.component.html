@@ -55,7 +55,8 @@
     <!-- COLONNA CHAT -->
     <div class="col-12 col-lg-5 d-flex flex-column">
       <app-chat [disabled]="!currentStep.chatEnabled"
-        [initialMessage]="currentStep.chatEnabled ? currentStep.description : undefined" class="flex-grow-1"></app-chat>
+        [initialMessage]="currentStep.chatEnabled ? currentStep.description : undefined"
+        [sigillo]="currentStep.chatEnabled ? currentStep.sigillo : undefined" class="flex-grow-1"></app-chat>
     </div>
 
   </div>
