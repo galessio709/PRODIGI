@@ -83,6 +83,12 @@ app.post('/logAccess', (req, res) => {
 
 // endpoint per leggere i log (solo admin)
 app.get('/getLogs', (req, res) => {
+  const providedKey = req.headers['x-admin-key'];
+  
+  if (providedKey !== ADMIN_KEY) {
+    return res.status(403).json({ error: 'Accesso negato: chiave admin non valida' });
+  }
+
   if (!fs.existsSync(LOG_FILE)) return res.json([]);
   const logs = JSON.parse(fs.readFileSync(LOG_FILE));
   res.json(logs);

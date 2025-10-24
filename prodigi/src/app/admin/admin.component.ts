@@ -1,25 +1,59 @@
 import { Component, OnInit, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
   logs: any[] = [];
   private http = inject(HttpClient);
+  
+  adminKey: string = '';
+  isAuthenticated: boolean = false;
+  errorMessage: string = '';
 
   ngOnInit(): void {
-    this.loadLogs();
+    // Non caricare i log automaticamente
+  }
+
+  authenticate() {
+    if (!this.adminKey.trim()) {
+      this.errorMessage = 'Inserisci la chiave admin';
+      return;
+    }
+
+    const headers = new HttpHeaders({
+      'x-admin-key': this.adminKey
+    });
+
+    this.http.get<any[]>('http://localhost:3000/getLogs', { headers })
+      .subscribe({
+        next: (data) => {
+          this.logs = data;
+          this.isAuthenticated = true;
+          this.errorMessage = '';
+        },
+        error: (err) => {
+          this.errorMessage = 'Chiave admin non valida';
+          this.isAuthenticated = false;
+        }
+      });
   }
 
   loadLogs() {
-    this.http.get<any[]>('http://localhost:3000/getLogs')
+    if (!this.isAuthenticated) return;
+    
+    const headers = new HttpHeaders({
+      'x-admin-key': this.adminKey
+    });
+
+    this.http.get<any[]>('http://localhost:3000/getLogs', { headers })
       .subscribe(data => this.logs = data);
   }
 
@@ -42,6 +76,9 @@ export class AdminComponent implements OnInit {
   @Output() exitAdmin = new EventEmitter<void>();
 
   logoutAdmin() {
+    this.adminKey = '';
+    this.isAuthenticated = false;
+    this.logs = [];
     this.exitAdmin.emit();
   }
 }
