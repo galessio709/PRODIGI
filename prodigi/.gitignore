@@ -12,6 +12,7 @@ npm-debug.log
 yarn-error.log
 server/node_modules
 server/.env
+server/accessLogs
 
 # IDEs and editors
 .idea/

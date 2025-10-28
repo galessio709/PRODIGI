@@ -42,8 +42,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   username: string | null = localStorage.getItem("username")
 
-  usageLimitMinutes = 120;     // ⏱ tempo massimo d’uso (in mimnuti)
-  cooldownLimitHours = 0.001;          // tempo di blocco dopo scadenza (in ore)
+  usageLimitMinutes = 1;     // ⏱ tempo massimo d’uso (in mimnuti)
+  //cooldownLimitHours = 0.016666667;          // tempo di blocco dopo scadenza (in ore)
+  cooldownLimitHours = 0.016666667; // 1 minuto tempo di blocco dopo scadenza (in ore) 
   blockedLimit = false;
   unblockLimitTime: string | null = null;
 
@@ -74,8 +75,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       unblockAnalogTimeStorage: this.unblockAnalogTime,
       chatEnabledStorage: this.currentStep.chatEnabled,
       currentBookStorage: this.currentBook,
-      //achievements: this.achievements,
-      //sessionStartTime: this.sessionStartTime
+      sessionStartStorage: localStorage.getItem(`sessionStart_${this.username}`),
+      blockUntilStorage: localStorage.getItem(`blockUntil_${this.username}`),
     };
     localStorage.setItem(`gameState_${this.username}`, JSON.stringify(data));
   }
@@ -95,6 +96,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       this.unblockAnalogTime = state.unblockAnalogTimeStorage;
       this.chatEnabled = state.chatEnabledStorage;
       this.currentBook = state.currentBookStorage;
+      localStorage.setItem(`blockUntil_${this.username}`, state.blockUntilStorage);
+      localStorage.setItem(`sessionStart_${this.username}`, state.sessionStartStorage);
+      
       // Object.assign(this, state);
 
       // // Se esiste un blocco ancora valido, riapplichiamo overlay
@@ -118,8 +122,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   private checkUsage() {
     const now = Date.now();
-    const blockUntil = localStorage.getItem('blockUntil');
-    const sessionStart = localStorage.getItem('sessionStart');
+    const blockUntil = localStorage.getItem(`blockUntil_${this.username}`);
+    const sessionStart = localStorage.getItem(`sessionStart_${this.username}`);
 
     if (blockUntil && now < parseInt(blockUntil)) {
       this.blockedLimit = true;
@@ -128,7 +132,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }
 
     if (!sessionStart) {
-      localStorage.setItem('sessionStart', now.toString());
+      localStorage.setItem(`sessionStart_${this.username}`, now.toString());
       this.blockedLimit = false;
       this.unblockLimitTime = null;
       return;
@@ -139,11 +143,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
     if (elapsed >= limit) {
       const unblockAt = now + this.cooldownLimitHours * 60 * 60 * 1000;
-      localStorage.setItem('blockUntil', unblockAt.toString());
-      localStorage.removeItem('sessionStart');
+      localStorage.setItem(`blockUntil_${this.username}`, unblockAt.toString());
+      localStorage.removeItem(`sessionStart_${this.username}`);
       this.blockedLimit = true;
       this.unblockLimitTime = this.formatTime(unblockAt); // ⏰
     } else {
+      localStorage.removeItem(`blockUntil_${this.username}`);
       this.blockedLimit = false;
       this.unblockLimitTime = null;
     }
