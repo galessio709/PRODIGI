@@ -7,8 +7,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import path from 'path';
-//import { promisify } from 'util';
-//import lockfile from 'proper-lockfile';
+import { promisify } from 'util';
+import lockfile from 'proper-lockfile';
 
 // GOOGLE AI STUDIO API 
 
@@ -19,9 +19,48 @@ if (!process.env.GOOGLE_API_KEY) {
 if (!process.env.ADMIN_KEY) {
   throw new Error('ADMIN_KEY non configurata nel file .env');
 }
+
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  'https://play.unicam.it',
+  'http://play.unicam.it',      // In case someone accesses without HTTPS
+  'http://localhost:4200',
+  'http://127.0.0.1:4200'    // Alternative localhost
+];
+
+// Add production URL from .env if available
+if (process.env.FRONTEND_URL) {
+  try {
+    const origin = new URL(process.env.FRONTEND_URL).origin;
+    if (!allowedOrigins.includes(origin)) {
+      allowedOrigins.push(origin);
+    }
+  } catch (error) {
+    console.error('Invalid FRONTEND_URL in .env:', error.message);
+  }
+}
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'x-admin-key']
+}));
+
 app.use(express.json());
+
+console.log('🔒 CORS enabled for origins:', allowedOrigins);
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
@@ -92,24 +131,43 @@ const ADMIN_KEY = process.env.ADMIN_KEY;  // la chiave viene dal .env
 // file JSON per salvare i log accessi
 const LOG_FILE = path.join(__dirname, 'accessLogs.json');
 
+const readFile = promisify(fs.readFile);
+const writeFile = promisify(fs.writeFile);
 
 // endpoint per salvare un log di accesso
-app.post('/logAccess', (req, res) => {
-  const logEntry = {
-    name: req.body.name || 'anonimo',
-    deviceId: req.body.deviceId || 'unknown',
-    date: new Date().toISOString()
-  };
+app.post('/logAccess', async (req, res) => {
+  let release;
+  try {
+    // Acquire lock before reading/writing
+    release = await lockfile.lock(LOG_FILE, {
+      retries: { retries: 5, minTimeout: 100 }
+    });
 
-  let logs = [];
-  if (fs.existsSync(LOG_FILE)) {
-    logs = JSON.parse(fs.readFileSync(LOG_FILE));
+    const logEntry = {
+      name: req.body.name || 'anonimo',
+      deviceId: req.body.deviceId || 'unknown',
+      date: new Date().toISOString()
+    };
+
+    let logs = [];
+    try {
+      const data = await readFile(LOG_FILE, 'utf8');
+      logs = JSON.parse(data);
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+
+    logs.push(logEntry);
+    await writeFile(LOG_FILE, JSON.stringify(logs, null, 2));
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error logging access:', error);
+    res.status(500).json({ error: 'Errore nel salvare il log' });
+  } finally {
+    // Always release the lock
+    if (release) await release();
   }
-
-  logs.push(logEntry);
-  fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
-
-  res.status(200).json({ success: true });
 });
 
 // endpoint per leggere i log (solo admin)
