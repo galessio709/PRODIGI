@@ -24,9 +24,11 @@ const app = express();
 
 const allowedOrigins = [
   'https://play.unicam.it',
-  'http://play.unicam.it',      // In case someone accesses without HTTPS
-  'http://localhost:4200',
-  'http://127.0.0.1:4200'    // Alternative localhost
+  'http://play.unicam.it',
+  'http://localhost:4200',  // Angular default
+  'http://127.0.0.1:4200',
+  'http://localhost:3000',  // If you're using port 3000
+  'http://127.0.0.1:3000'
 ];
 
 // Add production URL from .env if available

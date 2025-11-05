@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class GoogleAiService {
-  private apiUrl = 'http://localhost:3000/api/chat';
+  private apiUrl = '/api/chat';
 
   constructor(private http: HttpClient) {}
 
