@@ -2,18 +2,47 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import path from 'path';
+//import { promisify } from 'util';
+//import lockfile from 'proper-lockfile';
 
 // GOOGLE AI STUDIO API 
 
 dotenv.config();
+if (!process.env.GOOGLE_API_KEY) {
+  throw new Error('GOOGLE_API_KEY non configurata nel file .env');
+}
+if (!process.env.ADMIN_KEY) {
+  throw new Error('ADMIN_KEY non configurata nel file .env');
+}
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
-app.post('/api/chat', async (req, res) => {
+const chatLimiter = rateLimit({
+  windowMs: 30 * 1000,  // 1 minute
+  max: 30,              // Google's free tier: 60 requests/minute
+  message: { error: 'Troppe richieste, attendi un minuto' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.post('/api/chat', chatLimiter, async (req, res) => {
   const { message } = req.body;
+
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Messaggio non valido' });
+  }
+
+  if (message.length > 1000) {
+    return res.status(400).json({ error: 'Messaggio troppo lungo' });
+  }
 
   try {
     const response = await axios.post(
@@ -43,17 +72,18 @@ app.post('/api/chat', async (req, res) => {
     const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Nessuna risposta.';
     res.json({ reply: text });
   } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: 'Errore durante la richiesta a Google AI.' });
+    console.error('Google AI Error:', error.response?.data || error.message);
+
+    const statusCode = error.response?.status || 500;
+    const errorMessage = statusCode === 429
+      ? 'Troppe richieste, riprova tra poco'
+      : 'Errore durante la richiesta. Riprova.';
+
+    res.status(statusCode).json({ error: errorMessage });
   }
 });
 
 // ACCESS LOG HANDLING
-
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -61,6 +91,7 @@ const __dirname = dirname(__filename);
 const ADMIN_KEY = process.env.ADMIN_KEY;  // la chiave viene dal .env
 // file JSON per salvare i log accessi
 const LOG_FILE = path.join(__dirname, 'accessLogs.json');
+
 
 // endpoint per salvare un log di accesso
 app.post('/logAccess', (req, res) => {
@@ -84,7 +115,7 @@ app.post('/logAccess', (req, res) => {
 // endpoint per leggere i log (solo admin)
 app.get('/getLogs', (req, res) => {
   const providedKey = req.headers['x-admin-key'];
-  
+
   if (providedKey !== ADMIN_KEY) {
     return res.status(403).json({ error: 'Accesso negato: chiave admin non valida' });
   }
