@@ -32,7 +32,7 @@ export class AdminComponent implements OnInit {
       'x-admin-key': this.adminKey
     });
 
-    this.http.get<any[]>('http://localhost:3000/getLogs', { headers })
+    this.http.get<any[]>('/api/getLogs', { headers })
       .subscribe({
         next: (data) => {
           this.logs = data;
@@ -53,7 +53,7 @@ export class AdminComponent implements OnInit {
       'x-admin-key': this.adminKey
     });
 
-    this.http.get<any[]>('http://localhost:3000/getLogs', { headers })
+    this.http.get<any[]>('/api/getLogs', { headers })
       .subscribe(data => this.logs = data);
   }
 

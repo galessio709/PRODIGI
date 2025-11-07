@@ -137,7 +137,7 @@ const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
 // endpoint per salvare un log di accesso
-app.post('/logAccess', async (req, res) => {
+app.post('/api/logAccess', async (req, res) => {
   let release;
   try {
     // Acquire lock before reading/writing
@@ -173,7 +173,7 @@ app.post('/logAccess', async (req, res) => {
 });
 
 // endpoint per leggere i log (solo admin)
-app.get('/getLogs', (req, res) => {
+app.get('/api/getLogs', (req, res) => {
   const providedKey = req.headers['x-admin-key'];
 
   if (providedKey !== ADMIN_KEY) {

@@ -35,7 +35,7 @@ export class LoginComponent {
     localStorage.setItem('username', name);
 
     // registra log di accesso
-    this.http.post('http://localhost:3000/logAccess', { name, deviceId })
+    this.http.post('/api/logAccess', { name, deviceId })
       .subscribe({
         next: () => console.log('Log inviato al server'),
         error: err => console.error('Errore invio log', err)
