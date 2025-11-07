@@ -42,7 +42,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   username: string | null = localStorage.getItem("username")
 
-  usageLimitMinutes = 100;     // ⏱ tempo massimo d’uso (in mimnuti)
+  usageLimitMinutes = 0.5;     // ⏱ tempo massimo d’uso (in mimnuti)
   //cooldownLimitHours = 0.016666667;          // tempo di blocco dopo scadenza (in ore)
   cooldownLimitHours = 0.016666667; // 1 minuto tempo di blocco dopo scadenza (in ore) 
   blockedLimit = false;
@@ -77,6 +77,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       currentBookStorage: this.currentBook,
       sessionStartStorage: localStorage.getItem(`sessionStart_${this.username}`),
       blockUntilStorage: localStorage.getItem(`blockUntil_${this.username}`),
+      chatUnlockTimeStorage: localStorage.getItem(`chatUnlockTime_${this.username}`), // Add this
     };
     localStorage.setItem(`gameState_${this.username}`, JSON.stringify(data));
   }
@@ -98,22 +99,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       this.currentBook = state.currentBookStorage;
       localStorage.setItem(`blockUntil_${this.username}`, state.blockUntilStorage);
       localStorage.setItem(`sessionStart_${this.username}`, state.sessionStartStorage);
-      
-      // Object.assign(this, state);
 
-      // // Se esiste un blocco ancora valido, riapplichiamo overlay
-      // if (this.blockedAnalog && Date.now() < this.unblockAnalogTime) {
-      //   this.startAnalogCountdown();
-      // } else {
-      //   this.blockedAnalog = false;
-      // }
-
-      // if (this.chatUnlockTime && Date.now() < this.chatUnlockTime) {
-      //   this.chatEnabled = false;
-      //   this.scheduleChatUnlock();
-      // } else {
-      //   this.chatEnabled = true;
-      // }
+      // Restore the analog unlock time if it exists
+      if (state.chatUnlockTimeStorage) {
+        localStorage.setItem(`chatUnlockTime_${this.username}`, state.chatUnlockTimeStorage);
+      }
 
     } catch (err) {
       console.error('Errore nel caricamento stato utente', err);
@@ -125,12 +115,25 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     const blockUntil = localStorage.getItem(`blockUntil_${this.username}`);
     const sessionStart = localStorage.getItem(`sessionStart_${this.username}`);
 
+    // Check if user is currently blocked
     if (blockUntil && now < parseInt(blockUntil)) {
       this.blockedLimit = true;
-      this.unblockLimitTime = this.formatTime(parseInt(blockUntil)); // ⏰ mostra orario
+      this.unblockLimitTime = this.formatTime(parseInt(blockUntil));
       return;
     }
 
+    // If block period has ended, clear both blockUntil AND sessionStart to reset
+    if (blockUntil && now >= parseInt(blockUntil)) {
+      localStorage.removeItem(`blockUntil_${this.username}`);
+      localStorage.removeItem(`sessionStart_${this.username}`); // Add this line
+      this.blockedLimit = false;
+      this.unblockLimitTime = null;
+      // Start a fresh session
+      localStorage.setItem(`sessionStart_${this.username}`, now.toString());
+      return;
+    }
+
+    // Start new session if none exists
     if (!sessionStart) {
       localStorage.setItem(`sessionStart_${this.username}`, now.toString());
       this.blockedLimit = false;
@@ -138,6 +141,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+    // Check if usage limit exceeded
     const elapsed = now - parseInt(sessionStart);
     const limit = this.usageLimitMinutes * 60 * 1000;
 
@@ -146,9 +150,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       localStorage.setItem(`blockUntil_${this.username}`, unblockAt.toString());
       localStorage.removeItem(`sessionStart_${this.username}`);
       this.blockedLimit = true;
-      this.unblockLimitTime = this.formatTime(unblockAt); // ⏰
+      this.unblockLimitTime = this.formatTime(unblockAt);
     } else {
-      localStorage.removeItem(`blockUntil_${this.username}`);
       this.blockedLimit = false;
       this.unblockLimitTime = null;
     }
@@ -348,13 +351,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (step.blockedAnalog) {
       // chat abilitata solo dopo X minuti
       const unlockTime = Date.now() + this.analogCooldownMinutes * 60 * 1000;
-      localStorage.setItem('chatUnlockTime', unlockTime.toString());
-      this.unblockAnalogTime = unlockTime.toString()
+      localStorage.setItem(`chatUnlockTime_${this.username}`, unlockTime.toString()); // User-specific key
+      this.unblockAnalogTime = this.formatTime(unlockTime);
       this.chatEnabled = false;
 
       // controlla periodicamente se il tempo è passato
       const interval = setInterval(() => {
-        const unlock = parseInt(localStorage.getItem('chatUnlockTime') || '0');
+        const unlock = parseInt(localStorage.getItem(`chatUnlockTime_${this.username}`) || '0'); // User-specific key
         if (Date.now() >= unlock) {
           this.advanceStep()
           clearInterval(interval);

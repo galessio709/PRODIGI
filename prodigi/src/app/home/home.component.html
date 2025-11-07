@@ -11,6 +11,9 @@
   <div class="overlay-content">
     È il momento della missione analogica!<br><br>
     {{ currentStep.description }}<br><br>
+    <span *ngIf="unblockAnalogTime">
+      Potrai continuare alle <strong>{{ unblockAnalogTime }}</strong>
+    </span>
   </div>
 </div>
 
