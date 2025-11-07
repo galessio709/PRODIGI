@@ -133,6 +133,9 @@ const ADMIN_KEY = process.env.ADMIN_KEY;  // la chiave viene dal .env
 // file JSON per salvare i log accessi
 const LOG_FILE = path.join(__dirname, 'accessLogs.json');
 
+const readFile = promisify(fs.readFile);
+const writeFile = promisify(fs.writeFile);
+
 // Helper function to safely read logs
 async function readLogs() {
   try {
