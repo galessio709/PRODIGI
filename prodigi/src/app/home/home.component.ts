@@ -42,13 +42,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   username: string | null = localStorage.getItem("username")
 
-  usageLimitMinutes = 0.5;     // ⏱ tempo massimo d’uso (in mimnuti)
+  usageLimitMinutes = 5;     // ⏱ tempo massimo d’uso (in mimnuti)
   //cooldownLimitHours = 0.016666667;          // tempo di blocco dopo scadenza (in ore)
-  cooldownLimitHours = 0.016666667; // 1 minuto tempo di blocco dopo scadenza (in ore) 
+  cooldownLimitHours = 0.0833333; // 5 minuti tempo di blocco dopo scadenza (in ore) 
   blockedLimit = false;
   unblockLimitTime: string | null = null;
 
-  analogCooldownMinutes = 0.01;  // ⏱ tempo di attivitò analogica (in mimnuti) da attendere prima di abilitare la chat
+  analogCooldownMinutes = 5;  // ⏱ tempo di attivitò analogica (in mimnuti) da attendere prima di abilitare la chat
   unblockAnalogTime: string | null = null;
 
   currentBook = "/assets/diario.png"

@@ -133,16 +133,50 @@ const ADMIN_KEY = process.env.ADMIN_KEY;  // la chiave viene dal .env
 // file JSON per salvare i log accessi
 const LOG_FILE = path.join(__dirname, 'accessLogs.json');
 
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
+// Helper function to safely read logs
+async function readLogs() {
+  try {
+    if (!fs.existsSync(LOG_FILE)) {
+      // Create empty file if it doesn't exist
+      await writeFile(LOG_FILE, JSON.stringify([], null, 2));
+      return [];
+    }
+    const data = await readFile(LOG_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('Error reading logs:', err);
+    return [];
+  }
+}
+
+// Helper function to safely write logs
+async function writeLogs(logs) {
+  await writeFile(LOG_FILE, JSON.stringify(logs, null, 2));
+}
 
 // endpoint per salvare un log di accesso
 app.post('/api/logAccess', async (req, res) => {
   let release;
   try {
+    // Ensure directory exists
+    const dir = dirname(LOG_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Ensure file exists before trying to lock it
+    if (!fs.existsSync(LOG_FILE)) {
+      await writeFile(LOG_FILE, JSON.stringify([], null, 2));
+    }
+
     // Acquire lock before reading/writing
     release = await lockfile.lock(LOG_FILE, {
-      retries: { retries: 5, minTimeout: 100 }
+      retries: { 
+        retries: 5, 
+        minTimeout: 100,
+        maxTimeout: 1000
+      },
+      stale: 10000 // Consider lock stale after 10 seconds
     });
 
     const logEntry = {
@@ -151,38 +185,52 @@ app.post('/api/logAccess', async (req, res) => {
       date: new Date().toISOString()
     };
 
-    let logs = [];
-    try {
-      const data = await readFile(LOG_FILE, 'utf8');
-      logs = JSON.parse(data);
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err;
-    }
-
+    // Read current logs
+    const logs = await readLogs();
+    
+    // Add new entry
     logs.push(logEntry);
-    await writeFile(LOG_FILE, JSON.stringify(logs, null, 2));
+    
+    // Write back to file
+    await writeLogs(logs);
 
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error logging access:', error);
-    res.status(500).json({ error: 'Errore nel salvare il log' });
+    res.status(500).json({ 
+      error: 'Errore nel salvare il log',
+      details: error.message 
+    });
   } finally {
     // Always release the lock
-    if (release) await release();
+    if (release) {
+      try {
+        await release();
+      } catch (releaseError) {
+        console.error('Error releasing lock:', releaseError);
+      }
+    }
   }
 });
 
 // endpoint per leggere i log (solo admin)
-app.get('/api/getLogs', (req, res) => {
+app.get('/api/getLogs', async (req, res) => {
   const providedKey = req.headers['x-admin-key'];
 
   if (providedKey !== ADMIN_KEY) {
     return res.status(403).json({ error: 'Accesso negato: chiave admin non valida' });
   }
 
-  if (!fs.existsSync(LOG_FILE)) return res.json([]);
-  const logs = JSON.parse(fs.readFileSync(LOG_FILE));
-  res.json(logs);
+  try {
+    const logs = await readLogs();
+    res.json(logs);
+  } catch (error) {
+    console.error('Error getting logs:', error);
+    res.status(500).json({ 
+      error: 'Errore nel leggere i log',
+      details: error.message 
+    });
+  }
 });
 
 // server 
