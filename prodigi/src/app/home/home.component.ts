@@ -42,27 +42,45 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   username: string | null = localStorage.getItem("username")
 
-  usageLimitMinutes = 10;     // ⏱ tempo massimo d’uso (in mimnuti)
-  //cooldownLimitHours = 0.016666667;          // tempo di blocco dopo scadenza (in ore)
+  usageLimitMinutes = 1;     // ⏱ tempo massimo d'uso (in minuti)
   cooldownLimitHours = 0.0833333; // 5 minuti tempo di blocco dopo scadenza (in ore) 
   blockedLimit = false;
   unblockLimitTime: string | null = null;
 
-  analogCooldownMinutes = 5;  // ⏱ tempo di attivitò analogica (in mimnuti) da attendere prima di abilitare la chat
+  analogCooldownMinutes = 5;  // ⏱ tempo di attività analogica (in minuti) da attendere prima di abilitare la chat
   unblockAnalogTime: string | null = null;
 
   currentBook = "/assets/diario.png"
+
+  // Interval references to clean up properly
+  private usageLimitInterval?: any;
+  private analogCooldownInterval?: any;
+  private chatCheckInterval?: any;
 
   ngAfterViewInit() {
     console.log(this.username)
     this.loadProgress();
     this.checkUsage();
-    setInterval(() => {
+    
+    // Check usage limit every 10 seconds
+    this.usageLimitInterval = setInterval(() => {
       this.checkUsage()
-      // console.log("ogni secondo controllo limite di gioco")
-    }, 10 * 1000); // ricontrolla ogni secondo 1000ms
-    this.createIframeOnce(this.games[this.currentIndex].projectUrl); // crea l'iframe **una sola volta**
+    }, 10 * 1000);
+    
+    this.createIframeOnce(this.games[this.currentIndex].projectUrl);
     this.handleStep();
+  }
+
+  ngOnDestroy(): void {
+    // Clean up all intervals
+    if (this.usageLimitInterval) clearInterval(this.usageLimitInterval);
+    if (this.analogCooldownInterval) clearInterval(this.analogCooldownInterval);
+    if (this.chatCheckInterval) clearInterval(this.chatCheckInterval);
+    
+    // Clean up iframe listener
+    if (this.iframeEl && this.onLoadListener) {
+      this.iframeEl.removeEventListener('load', this.onLoadListener);
+    }
   }
 
   private saveProgress() {
@@ -77,7 +95,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       currentBookStorage: this.currentBook,
       sessionStartStorage: localStorage.getItem(`sessionStart_${this.username}`),
       blockUntilStorage: localStorage.getItem(`blockUntil_${this.username}`),
-      chatUnlockTimeStorage: localStorage.getItem(`chatUnlockTime_${this.username}`), // Add this
+      chatUnlockTimeStorage: localStorage.getItem(`chatUnlockTime_${this.username}`),
     };
     localStorage.setItem(`gameState_${this.username}`, JSON.stringify(data));
   }
@@ -89,18 +107,21 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     try {
       const state = JSON.parse(raw);
 
-      this.currentIndex = state.currentIndexStorage;
-      this.currentGame.currentStepIndex = state.currentStepIndexStorage;
-      this.blockedLimit = state.blockedLimitStorage;
-      this.unblockLimitTime = state.unblockLimitTimeStorage;
-      this.currentStep.blockedAnalog = state.blockedAnalogStorage;
-      this.unblockAnalogTime = state.unblockAnalogTimeStorage;
-      this.chatEnabled = state.chatEnabledStorage;
-      this.currentBook = state.currentBookStorage;
-      localStorage.setItem(`blockUntil_${this.username}`, state.blockUntilStorage);
-      localStorage.setItem(`sessionStart_${this.username}`, state.sessionStartStorage);
-
-      // Restore the analog unlock time if it exists
+      this.currentIndex = state.currentIndexStorage ?? 0;
+      this.currentGame.currentStepIndex = state.currentStepIndexStorage ?? 0;
+      this.blockedLimit = state.blockedLimitStorage ?? false;
+      this.unblockLimitTime = state.unblockLimitTimeStorage ?? null;
+      this.currentStep.blockedAnalog = state.blockedAnalogStorage ?? false;
+      this.unblockAnalogTime = state.unblockAnalogTimeStorage ?? null;
+      this.chatEnabled = state.chatEnabledStorage ?? false;
+      this.currentBook = state.currentBookStorage ?? "/assets/diario.png";
+      
+      if (state.blockUntilStorage) {
+        localStorage.setItem(`blockUntil_${this.username}`, state.blockUntilStorage);
+      }
+      if (state.sessionStartStorage) {
+        localStorage.setItem(`sessionStart_${this.username}`, state.sessionStartStorage);
+      }
       if (state.chatUnlockTimeStorage) {
         localStorage.setItem(`chatUnlockTime_${this.username}`, state.chatUnlockTimeStorage);
       }
@@ -122,14 +143,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // If block period has ended, clear both blockUntil AND sessionStart to reset
+    // If block period has ended, clear and start fresh session
     if (blockUntil && now >= parseInt(blockUntil)) {
       localStorage.removeItem(`blockUntil_${this.username}`);
-      localStorage.removeItem(`sessionStart_${this.username}`); // Add this line
+      localStorage.removeItem(`sessionStart_${this.username}`);
       this.blockedLimit = false;
       this.unblockLimitTime = null;
-      // Start a fresh session
       localStorage.setItem(`sessionStart_${this.username}`, now.toString());
+      this.saveProgress();
       return;
     }
 
@@ -138,6 +159,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       localStorage.setItem(`sessionStart_${this.username}`, now.toString());
       this.blockedLimit = false;
       this.unblockLimitTime = null;
+      this.saveProgress();
       return;
     }
 
@@ -151,6 +173,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       localStorage.removeItem(`sessionStart_${this.username}`);
       this.blockedLimit = true;
       this.unblockLimitTime = this.formatTime(unblockAt);
+      this.saveProgress();
     } else {
       this.blockedLimit = false;
       this.unblockLimitTime = null;
@@ -185,7 +208,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "📖 Leggere il giornale e trovare una notizia positiva da raccontare." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Che notizia hai scelto? E’ stato semplice trovare una notizia positiva?", sigillo: "Be True" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Che notizia hai scelto? E' stato semplice trovare una notizia positiva?", sigillo: "Be True" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ],
       diario: '/assets/1.png',
@@ -199,7 +222,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🔴🟢🔵🟣 Giocare a Mastermind analogico con amici o familiari." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com’è stato giocare a mastermind?", sigillo: "Stay Safe" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com'è stato giocare a mastermind?", sigillo: "Stay Safe" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ],
       diario: '/assets/2.png',
@@ -213,7 +236,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "💌 Scrivere una lettera o una cartolina gentile a un amico/familiare e spedirla per posta.." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "A chi hai deciso di scrivere la tua lettera? Com’è stato usare parole gentili e scriverle a mano?", sigillo: "Be Kind" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "A chi hai deciso di scrivere la tua lettera? Com'è stato usare parole gentili e scriverle a mano?", sigillo: "Be Kind" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ],
       diario: '/assets/3.png',
@@ -227,7 +250,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🫂 Scegliere una piccola abitudine positiva da fare nel mondo reale con un amico o familiare." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Quale abitudine hai scelto di mettere in pratica? Com’è stato condividerla con qualcuno?", sigillo: "Good Habits" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Quale abitudine hai scelto di mettere in pratica? Com'è stato condividerla con qualcuno?", sigillo: "Good Habits" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ],
       diario: '/assets/4.png',
@@ -241,7 +264,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🗣️ Raccontare a voce qualcosa a un amico o familiare." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com’è stato staccare per un po’ dai dispositivi tecnologici? Hai notato se il tempo sembrava scorrere più lentamente o più veloce?", sigillo: "Keep Calm" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com'è stato staccare per un po' dai dispositivi tecnologici? Hai notato se il tempo sembrava scorrere più lentamente o più veloce?", sigillo: "Keep Calm" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ],
       diario: '/assets/5.png',
@@ -255,7 +278,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       steps: [
         { completedEnabled: true, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: true, description: "🗓️ Scrivere un piccolo planner cartaceo per organizzare il tempo tra studio, gioco, sport e pause." },
-        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com’è stato creare il tuo piano giornaliero? Ti sei accorto di quanto tempo passi online durante la giornata?", sigillo: "Balance" },
+        { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Com'è stato creare il tuo piano giornaliero? Ti sei accorto di quanto tempo passi online durante la giornata?", sigillo: "Balance" },
         { completedEnabled: false, nextGameEnabled: true, chatEnabled: false, blockedAnalog: false }
       ],
       diario: '/assets/6.png',
@@ -272,29 +295,25 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: true, blockedAnalog: false, description: "Hai condiviso il gioco amici e familiari? Cosa ne pensano? Vorrebbero giocarci anche loro", sigillo: "Harmony" },
         { completedEnabled: false, nextGameEnabled: false, chatEnabled: false, blockedAnalog: false }
       ],
-      diario: '/assets/7.png', sigillo: "harmony.png"
+      diario: '/assets/7.png', 
+      sigillo: "/assets/harmony.png"
     }
   ];
 
   currentIndex = 0;
 
   private iframeEl?: HTMLIFrameElement;
-  private currentSrc = '';          // tiene traccia dell'url attuale applicato all'iframe
+  private currentSrc = '';
   private onLoadListener?: () => void;
 
   chatEnabled = false;
   showAchievement = false;
 
-  constructor(private sanitizer: DomSanitizer,
+  constructor(
+    private sanitizer: DomSanitizer,
     private renderer2: Renderer2,
-    private router: Router) { }
-
-  ngOnDestroy(): void {
-    // pulizia listener se necessario
-    if (this.iframeEl && this.onLoadListener) {
-      this.iframeEl.removeEventListener('load', this.onLoadListener);
-    }
-  }
+    private router: Router
+  ) { }
 
   get currentGame(): ScratchGame {
     return this.games[this.currentIndex];
@@ -313,13 +332,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   }
 
   onAnimationEnd() {
-    this.showAchievement = false; // remove after fade out completes
+    this.showAchievement = false;
   }
 
-  // --- Avanza tra step ---
   markStepCompleted() {
     if (this.currentStep.completedEnabled) {
-      // this.currentStep.completedEnabled = false;
       this.advanceStep();
     }
   }
@@ -338,56 +355,94 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       this.games[this.currentIndex].currentStepIndex = 0;
       this.updateIframeSrc(this.currentGame.projectUrl);
     }
-    this.saveProgress()
-    this.handleStep()
+    this.saveProgress();
+    this.handleStep();
   }
 
   handleStep() {
-    console.log("onInit faccio handleStep")
-    console.log(this.currentStep)
-    const step = this.currentStep;
-
-    // --- Gestione chat con cooldown ---
-    if (step.blockedAnalog) {
-      // chat abilitata solo dopo X minuti
-      const unlockTime = Date.now() + this.analogCooldownMinutes * 60 * 1000;
-      localStorage.setItem(`chatUnlockTime_${this.username}`, unlockTime.toString()); // User-specific key
-      this.unblockAnalogTime = this.formatTime(unlockTime);
-      this.chatEnabled = false;
-
-      // controlla periodicamente se il tempo è passato
-      const interval = setInterval(() => {
-        const unlock = parseInt(localStorage.getItem(`chatUnlockTime_${this.username}`) || '0'); // User-specific key
-        if (Date.now() >= unlock) {
-          this.advanceStep()
-          clearInterval(interval);
-        }
-      }, 1000); // ogni secondo, puoi aumentare a 10-30s per ottimizzare
+    console.log("handleStep chiamato", this.currentStep);
+    
+    // Clear any existing intervals first
+    if (this.analogCooldownInterval) {
+      clearInterval(this.analogCooldownInterval);
+      this.analogCooldownInterval = undefined;
+    }
+    if (this.chatCheckInterval) {
+      clearInterval(this.chatCheckInterval);
+      this.chatCheckInterval = undefined;
     }
 
+    const step = this.currentStep;
+
+    // --- Gestione attività analogica con cooldown ---
+    if (step.blockedAnalog) {
+      const now = Date.now();
+      const storedUnlockTime = localStorage.getItem(`chatUnlockTime_${this.username}`);
+      
+      let unlockTime: number;
+      
+      // Check if there's already a cooldown in progress
+      if (storedUnlockTime && parseInt(storedUnlockTime) > now) {
+        unlockTime = parseInt(storedUnlockTime);
+        console.log("Ripristino cooldown analogico esistente");
+      } else {
+        // Start new cooldown
+        unlockTime = now + this.analogCooldownMinutes * 60 * 1000;
+        localStorage.setItem(`chatUnlockTime_${this.username}`, unlockTime.toString());
+        console.log("Nuovo cooldown analogico avviato");
+      }
+      
+      this.unblockAnalogTime = this.formatTime(unlockTime);
+      this.chatEnabled = false;
+      this.saveProgress();
+
+      // Check periodically if time has passed
+      this.analogCooldownInterval = setInterval(() => {
+        const unlock = parseInt(localStorage.getItem(`chatUnlockTime_${this.username}`) || '0');
+        const remaining = unlock - Date.now();
+        
+        if (remaining <= 0) {
+          console.log("Cooldown analogico completato");
+          localStorage.removeItem(`chatUnlockTime_${this.username}`);
+          this.unblockAnalogTime = null;
+          clearInterval(this.analogCooldownInterval);
+          this.analogCooldownInterval = undefined;
+          this.advanceStep();
+        } else {
+          // Update displayed time
+          this.unblockAnalogTime = this.formatTime(unlock);
+        }
+      }, 1000);
+    }
+
+    // --- Gestione chat con verifica risposta ---
     if (step.chatEnabled) {
-      const message = this.currentStep.description;  // domanda per valutare att. anaogica
-      const sigillo = this.currentStep.sigillo;  // domanda per valutare att. anaogica
-      console.log(`dentro step.chatEnabled ${message} - ${sigillo}`)
+      const message = this.currentStep.description;
+      const sigillo = this.currentStep.sigillo;
+      console.log(`Chat abilitata: ${message} - ${sigillo}`);
+      
       if (this.chatRef) {
-        console.log(`dentro chatRef ${this.chatRef}`)
         this.chatRef.initialMessage = message ?? undefined;
         this.chatRef.sigillo = sigillo ?? undefined;
-        const interval = setInterval(() => {
-          const unlock = this.chatRef.getLastResponse()
-          console.log("ogni secondo controllo ultima risposta")
-          if (unlock.includes("Puoi passare al prossimo gioco!")) {
-            this.showBadge()
-            this.currentBook = this.currentGame.diario
-            this.advanceStep()
-            clearInterval(interval);
+        
+        // Check chat response periodically
+        this.chatCheckInterval = setInterval(() => {
+          const lastResponse = this.chatRef.getLastResponse();
+          console.log("Controllo risposta chat");
+          
+          if (lastResponse.includes("Puoi passare al prossimo gioco!")) {
+            console.log("Badge sbloccato!");
+            this.showBadge();
+            this.currentBook = this.currentGame.diario;
+            clearInterval(this.chatCheckInterval);
+            this.chatCheckInterval = undefined;
+            this.advanceStep();
           }
-        }, 1000); // ogni secondo, puoi aumentare a 10-30s per ottimizzare
+        }, 1000);
       }
     }
   }
 
-  // --- Creazione e aggiornamento iframe ---
   private createIframeOnce(url: string): void {
     if (this.iframeEl) return;
 
