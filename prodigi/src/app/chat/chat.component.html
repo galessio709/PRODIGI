@@ -2,12 +2,11 @@
   <h2 class="chat-title">Chatta con PRODIGI AI</h2>
 
   <div class="chat-content">
-    <div #chatBox class="chat-box">
+    <div #chatBox class="chat-box" (scroll)="onScroll()">
       <div *ngFor="let msg of messages" [ngClass]="msg.user">
         <div class="bubble">
           {{ msg.text }}
         </div>
-
       </div>
       <div *ngIf="loading">⏳ Sto pensando...</div>
     </div>
@@ -25,6 +24,4 @@
       </div>
     </div>
   </div>
-
-
 </div>

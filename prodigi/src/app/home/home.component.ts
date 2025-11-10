@@ -42,7 +42,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   username: string | null = localStorage.getItem("username")
 
-  usageLimitMinutes = 5;     // ⏱ tempo massimo d’uso (in mimnuti)
+  usageLimitMinutes = 10;     // ⏱ tempo massimo d’uso (in mimnuti)
   //cooldownLimitHours = 0.016666667;          // tempo di blocco dopo scadenza (in ore)
   cooldownLimitHours = 0.0833333; // 5 minuti tempo di blocco dopo scadenza (in ore) 
   blockedLimit = false;
