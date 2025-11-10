@@ -28,10 +28,13 @@ button.btn {
   font-size: 1.1rem;
   border-radius: 10px;
   padding: 0.9rem 1.4rem;
-  white-space: nowrap;
+  white-space: normal; /* Permette al testo di andare a capo */
+  word-break: break-word; /* Evita overflow di parole lunghe */
   transition: background-color 0.2s, transform 0.1s;
   cursor: pointer;
   border: 0.2em solid white; /* bordo bianco */
+  max-width: 100%; /* Limita la larghezza al contenitore */
+  box-sizing: border-box; /* Include padding e border nella larghezza */
 }
 
 /* Effetto hover quando attivo */
@@ -44,6 +47,14 @@ button.btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Ottimizzazione per schermi piccoli */
+@media (max-width: 480px) {
+  button.btn {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
+  }
 }
 
 .app-block-overlay {
