@@ -59,10 +59,10 @@ if (process.env.FRONTEND_URL) {
 
 // Configure CORS to allow requests only from specified origins
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -102,8 +102,8 @@ async function appendRequestLog(logEntry) {
 
     // Lock the file to prevent concurrent write issues
     release = await lockfile.lock(REQUEST_LOG_FILE, {
-      retries: { 
-        retries: 5, 
+      retries: {
+        retries: 5,
         minTimeout: 100,
         maxTimeout: 1000
       },
@@ -113,13 +113,13 @@ async function appendRequestLog(logEntry) {
     // Read existing logs
     const data = await readFile(REQUEST_LOG_FILE, 'utf8');
     const logs = JSON.parse(data);
-    
+
     // Add new log entry
     logs.push(logEntry);
-    
+
     // Keep only last 1000 requests to prevent file from growing too large
     const trimmedLogs = logs.slice(-1000);
-    
+
     // Write back to file
     await writeFile(REQUEST_LOG_FILE, JSON.stringify(trimmedLogs, null, 2));
   } catch (err) {
@@ -140,30 +140,30 @@ async function appendRequestLog(logEntry) {
 app.use(async (req, res, next) => {
   const startTime = Date.now();
   const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   // Intercept res.json and res.status to capture response details
   const originalJson = res.json.bind(res);
   const originalStatus = res.status.bind(res);
-  
+
   let statusCode = 200;
   let responseBody = null;
-  
+
   // Override res.status to capture the status code
-  res.status = function(code) {
+  res.status = function (code) {
     statusCode = code;
     return originalStatus(code);
   };
-  
+
   // Override res.json to capture the response body
-  res.json = function(body) {
+  res.json = function (body) {
     responseBody = body;
     return originalJson(body);
   };
-  
+
   // When response finishes, log the complete request/response cycle
   res.on('finish', async () => {
     const duration = Date.now() - startTime;
-    
+
     // Build the log entry with all relevant information
     const logEntry = {
       requestId,
@@ -185,14 +185,14 @@ app.use(async (req, res, next) => {
         'x-forwarded-for': req.get('x-forwarded-for') // Shows proxy chain
       }
     };
-    
+
     // Print to console for immediate visibility
     console.log(`[${logEntry.timestamp}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms - IP: ${req.ip}`);
-    
+
     // Write to file asynchronously (non-blocking)
     appendRequestLog(logEntry);
   });
-  
+
   next();
 });
 
@@ -239,6 +239,9 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
             ]
           }
         ],
+        config: {
+          temperature: 1.2,
+        },
         // Safety settings to block harmful content
         safetySettings: [
           { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
@@ -310,8 +313,8 @@ app.post('/api/logAccess', async (req, res) => {
 
     // Lock file to prevent concurrent write conflicts
     release = await lockfile.lock(LOG_FILE, {
-      retries: { 
-        retries: 5, 
+      retries: {
+        retries: 5,
         minTimeout: 100,
         maxTimeout: 1000
       },
@@ -333,9 +336,9 @@ app.post('/api/logAccess', async (req, res) => {
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error logging access:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Errore nel salvare il log',
-      details: error.message 
+      details: error.message
     });
   } finally {
     // Always release the file lock
@@ -363,9 +366,9 @@ app.get('/api/getLogs', async (req, res) => {
     res.json(logs);
   } catch (error) {
     console.error('Error getting logs:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Errore nel leggere i log',
-      details: error.message 
+      details: error.message
     });
   }
 });
