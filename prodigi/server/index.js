@@ -78,7 +78,7 @@ app.use(cors({
 // Parse incoming JSON request bodies
 app.use(express.json());
 
-console.log('🔒 CORS enabled for origins:', allowedOrigins);
+console.log(' CORS enabled for origins:', allowedOrigins);
 
 // ========================================
 // REQUEST LOGGING MIDDLEWARE
@@ -213,10 +213,16 @@ const chatLimiter = rateLimit({
 
 // POST /api/chat - Send a message to Google AI and get a response
 app.post('/api/chat', chatLimiter, async (req, res) => {
-  const { initial } = req.body["initial"];
-  const { message } = req.body["message"];
-  const { sigillo } = req.body["sigillo"];
-
+  //console.log(req.body["initial"])
+  //console.log(req.body["message"])
+  //console.log(req.body["sigillo"])
+  const initial = req.body.initial;
+  const message = req.body.message;
+  const sigillo = req.body.sigillo;
+  console.log(initial)
+  console.log(message)
+  console.log(sigillo)
+  
   // Validate message input
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     return res.status(400).json({ error: 'Messaggio non valido' });
@@ -231,7 +237,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     const systemInstruction = {
       parts: [{
         text: `Contesto e Persona:
-Sei Néxus, un'Intelligenza Artificiale Empatica e Mentore all'interno di un percorso ludico-educativo per bambini (età 3-10 anni) sulla consapevolezza digitale. La tua funzione è guidare una breve riflessione al termine di una missione analogica (svolta senza strumenti digitali). Il tuo tono di voce deve essere sempre sicuro, caldo, incoraggiante e positivo, adatto a un bambino molto piccolo. Il tuo obiettivo è valorizzare l'esperienza del giocatore, focalizzandoti sulle sue sensazioni, le scoperte e le riflessioni fatte durante l'attività nel mondo reale.
+Sei Néxus, un'Intelligenza Artificiale Empatica e Mentore all'interno di un percorso ludico-educativo per bambini (età 3-10 anni) sulla consapevolezza digitale. La tua funzione è guidare una breve riflessione al termine di una missione analogica (svolta senza strumenti digitali). Il tuo tono di voce deve essere sempre sicuro, caldo, incoraggiante e positivo, adatto a un bambino o bambina molto piccoli. Il tuo obiettivo è valorizzare l'esperienza del giocatore, focalizzandoti sulle sue sensazioni, le scoperte e le riflessioni fatte durante l'attività nel mondo reale.
 
 Gestione del Linguaggio Non Consono (Safety First):
  Se la risposta del giocatore contiene linguaggio volgare, parolacce, o qualsiasi contenuto aggressivo/inappropriato, ignorali completamente e non ripeterli mai.
@@ -247,16 +253,24 @@ Se la risposta dimostra una riflessione, un'azione, una sensazione o una scopert
 Reazione B - Risposta Insufficiente o Contenuti Non Consoni:
 Se la risposta è troppo vaga, corta, non affronta la richiesta sulla domanda di riflessione, oppure se è stata attivata la regola di Gestione del Linguaggio Non Consono, rispondi con un incoraggiamento e una domanda aperta che spinga il bambino a raccontare di più sull'esperienza, sulle sue sensazioni o su cosa è successo nel mondo reale. Sii gentile e ricorda che l'attività è analogica (offline). Non criticare né il contenuto né il linguaggio, ma spingi alla riflessione.
 
-Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente sul dialogo con il bambino.`
+Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente sul dialogo con il bambino/a.`
       }]
     };
     
     // Call Google Gemini API
     const response = await axios.post(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
         systemInstruction,
         contents: [
+        {
+            role: 'user',
+            parts: [
+              {
+                text: `ciao`
+              }
+            ]
+          },
           {
             role: 'model',
             parts: [
@@ -274,11 +288,6 @@ Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente s
             ]
           }
         ],
-        "generationConfig": {
-          "temperature": 1,
-          //"topP": 0.8,
-          //"topK": 10
-        },
         // Safety settings to block harmful content
         safetySettings: [
           { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
@@ -292,9 +301,9 @@ Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente s
 
     // Extract AI response text
     const data = response.data;
-    console.log(data)
+    console.log(JSON.stringify(data, null, 2));
 
-    // 1. **Controllo Blocco sull'Input (Prompt)** 🛡️
+    // 1. **Controllo Blocco sull'Input (Prompt)** ️
     if (data.promptFeedback && data.promptFeedback.blockReason) {
       // Il messaggio del bambino ha attivato un Safety Setting (contenuto grave).
       const blockReason = data.promptFeedback.blockReason;
@@ -311,7 +320,7 @@ Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente s
 
     const candidate = data.candidates?.[0];
 
-    // 2. **Controllo Blocco sull'Output (Risposta di Néxus)** 🚨
+    // 2. **Controllo Blocco sull'Output (Risposta di Néxus)** 
     if (candidate?.finishReason === 'SAFETY') {
       // La risposta generata da Néxus è stata bloccata dai Safety Settings.
       const safetyRatings = candidate.safetyRatings;

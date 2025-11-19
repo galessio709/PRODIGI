@@ -69,7 +69,7 @@ Se la risposta è troppo vaga, corta, non affronta la richiesta sulla domanda di
 Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente sul dialogo con il bambino.`;
     
     this.messages.push({ user: 'user', text: this.userInput });
-    this.userInput = '';
+    
     this.scrollToBottomIfNeeded();
     this.loading = true;
 
@@ -85,6 +85,8 @@ Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente s
         this.scrollToBottomIfNeeded();
       }
     });
+
+    this.userInput = '';
   }
 
   private scrollToBottomIfNeeded() {
