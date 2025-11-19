@@ -240,7 +240,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
           }
         ],
         "generationConfig": {
-          "temperature": 1.2,
+          "temperature": 1,
           //"topP": 0.8,
           //"topK": 10
         },
@@ -256,9 +256,45 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     );
 
     // Extract AI response text
-    const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Nessuna risposta.';
+    const data = response.data;
+
+    // 1. **Controllo Blocco sull'Input (Prompt)** 🛡️
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      // Il messaggio del bambino ha attivato un Safety Setting (contenuto grave).
+      const blockReason = data.promptFeedback.blockReason;
+      const safetyRatings = data.promptFeedback.safetyRatings;
+
+      console.error('⚠️ Google AI Safety Block: Prompt bloccato!', { blockReason, safetyRatings });
+
+      // Rispondi con un messaggio neutro all'utente e uno stato appropriato (es. 400 Bad Request)
+      return res.status(400).json({
+        error: "Contenuto non consentito rilevato.",
+        reply: "Prova a riflettere sulla tua missione usando parole diverse!"
+      });
+    }
+
+    const candidate = data.candidates?.[0];
+
+    // 2. **Controllo Blocco sull'Output (Risposta di Néxus)** 🚨
+    if (candidate?.finishReason === 'SAFETY') {
+      // La risposta generata da Néxus è stata bloccata dai Safety Settings.
+      const safetyRatings = candidate.safetyRatings;
+
+      console.error('⚠️ Google AI Safety Block: Risposta generata bloccata!', { safetyRatings });
+
+      // Rispondi con un messaggio neutro e uno stato appropriato (es. 500 Internal Error)
+      return res.status(500).json({
+        error: "Il sistema ha generato una risposta non idonea.",
+        reply: "C'è stato un errore nella comunicazione."
+      });
+    }
+
+    // 3. **Risposta Standard** ✅
+    const text = candidate?.content?.parts?.[0]?.text ?? 'Nessuna risposta.';
     res.json({ reply: text });
+
   } catch (error) {
+    // Gestione errori di rete, timeout, o errori API con status code (4xx/5xx)
     console.error('Google AI Error:', error.response?.data || error.message);
 
     // Handle rate limit errors from Google
