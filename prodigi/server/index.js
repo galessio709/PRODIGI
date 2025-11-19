@@ -239,8 +239,10 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
             ]
           }
         ],
-        config: {
-          temperature: 1.2,
+        "generationConfig": {
+          "temperature": 1.2,
+          //"topP": 0.8,
+          //"topK": 10
         },
         // Safety settings to block harmful content
         safetySettings: [
