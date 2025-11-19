@@ -220,7 +220,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Messaggio non valido' });
   }
 
-  if (message.length > 1000) {
+  if (message.length > 10000) {
     return res.status(400).json({ error: 'Messaggio troppo lungo' });
   }
 
