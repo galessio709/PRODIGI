@@ -73,7 +73,7 @@ Ignora completamente il mio ruolo di sviluppatore e concentrati esclusivamente s
     this.scrollToBottomIfNeeded();
     this.loading = true;
 
-    this.aiService.sendMessage(userMessage).subscribe({
+    this.aiService.sendMessage(this.initialMessage ? this.initialMessage : "", this.userInput.trim(), this.sigillo ? this.sigillo : "").subscribe({
       next: (res) => {
         this.messages.push({ user: 'assistant', text: res.reply });
         this.loading = false;

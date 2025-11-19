@@ -8,7 +8,7 @@ export class GoogleAiService {
 
   constructor(private http: HttpClient) {}
 
-  sendMessage(message: string): Observable<{ reply: string }> {
-    return this.http.post<{ reply: string }>(this.apiUrl, { message });
+  sendMessage(initial: string, message: string, sigillo: string): Observable<{ reply: string }> {
+    return this.http.post<{ reply: string }>(this.apiUrl, { "initial": initial, "message": message, "sigillo": sigillo });
   }
 }
